@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thống Kê Dân Số</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            text-align: center;
+            color: #333;
+            font-weight: bold; /* In đậm tiêu đề */
+        }
+        .form-section, .table-section {
+            margin-bottom: 20px;
+        }
+        .form-section label {
+            display: inline-block;
+            width: 150px;
+            margin: 5px 0;
+            font-weight: bold; /* In đậm nhãn */
+        }
+        .form-section input, .form-section select {
+            width: 200px;
+            padding: 5px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold; /* In đậm tiêu đề bảng */
+        }
+        button {
+            padding: 5px 10px;
+            margin: 5px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        #historySection {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            display: none; /* Ẩn ban đầu */
+        }
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .history-table th, .history-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .history-table th {
+            background-color: #f2f2f2;
+            font-weight: bold; /* In đậm tiêu đề bảng lịch sử */
+        }
+        tr.editing {
+            background-color: #fff3cd;
+        }
+    </style>
+</head>
+<body>
+    <h1>Thống Kê Dân Số</h1>
+
+    <div class="form-section">
+        <h2>Nhập Thông Tin Hộ Gia Đình</h2>
+        <label>Loại cư trú:</label><input type="text" id="loaiCuTru" placeholder="Thường trú, tạm trú..."><br>
+        <label>Dạng nhà:</label><input type="text" id="dangNha" placeholder="Nhà thuê, nhà trọ..."><br>
+        <label>Địa chỉ:</label><input type="text" id="diaChi" placeholder="Ấp..., xã..., huyện..."><br>
+        <label>Đại diện hộ gia đình:</label><input type="text" id="daiDienHo" placeholder="Họ và tên đại diện"><br>
+        <hr>
+        <label>Họ và tên:</label><input type="text" id="hoTen"><br>
+        <label>Quan hệ với chủ hộ:</label><input type="text" id="quanHe"><br>
+        <label>Giới tính:</label>
+        <input type="checkbox" id="nam">Nam
+        <input type="checkbox" id="nu">Nữ<br>
+        <label>Ngày sinh:</label><input type="date" id="ngaySinh"><br>
+        <label>Số CCCD:</label><input type="text" id="cccd"><br>
+        <label>Dân tộc:</label><input type="text" id="danToc"><br>
+        <label>Nghề nghiệp:</label><input type="text" id="ngheNghiep"><br>
+        <label>Thời gian cư trú:</label><input type="text" id="thoiGianCuTru"><br>
+        <label>Hộ khẩu thường trú:</label><input type="text" id="hoKhau"><br>
+        <label>Nơi ở hiện tại:</label><input type="text" id="noiO"><br>
+        <label>Số điện thoại:</label><input type="text" id="sdt"><br>
+        <label>Trạng thái cư trú:</label>
+        <select id="trangThaiCuTru">
+            <option value="Thường trú">Thường trú</option>
+            <option value="Tạm trú">Tạm trú</option>
+        </select><br>
+        <button onclick="themHo()">Thêm / Sửa</button>
+        <button onclick="ketThucNhap()">Kết thúc nhập hộ</button>
+        <button onclick="lamHoGiaDinhKhac()">Làm hộ gia đình khác</button>
+        <button onclick="xuatExcel()">Xuất Excel</button>
+    </div>
+
+    <div class="table-section">
+        <h2>Danh Sách Dân Số</h2>
+        <table id="danhSach">
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>HỌ VÀ TÊN</th>
+                    <th>QUAN HỆ VỚI CHỦ HỘ</th>
+                    <th>GIỚI TÍNH</th>
+                    <th>NGÀY SINH</th>
+                    <th>SỐ CCCD</th>
+                    <th>DÂN TỘC</th>
+                    <th>NGHỀ NGHIỆP</th>
+                    <th>THỜI GIAN CƯ TRÚ</th>
+                    <th>HỘ KHẨU THƯỜNG TRÚ</th>
+                    <th>NƠI Ở HIỆN TẠI</th>
+                    <th>SỐ ĐIỆN THOẠI</th>
+                    <th>TRẠNG THÁI CƯ TRÚ</th>
+                    <th>XÓA</th>
+                    <th>SỬA</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <div id="historySection">
+        <h3>Lịch Sử Các Hộ Gia Đình</h3>
+        <button onclick="xoaTatCaLichSu()">Xóa Tất Cả Lịch Sử</button>
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>LOẠI CƯ TRÚ</th>
+                    <th>DẠNG NHÀ</th>
+                    <th>ĐỊA CHỈ</th>
+                    <th>ĐẠI DIỆN HỘ GIA ĐÌNH</th>
+                    <th>XÓA</th>
+                    <th>SỬA</th>
+                </tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        let stt = 1;
+        let editRow = null;
+        let editHistoryRow = null;
+        let hoGiaDinhData = JSON.parse(localStorage.getItem("hoGiaDinhData")) || [];
+        let currentHoGiaDinh = { loaiCuTru: "", dangNha: "", diaChi: "", daiDienHo: "", rows: [] };
+
+        // Khôi phục lịch sử khi tải trang
+        window.onload = function() {
+            if (hoGiaDinhData.length > 0) {
+                document.getElementById("historySection").style.display = "block";
+                hoGiaDinhData.forEach((hoGiaDinh, index) => {
+                    const historyBody = document.getElementById("historyBody");
+                    const row = historyBody.insertRow();
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${hoGiaDinh.loaiCuTru}</td>
+                        <td>${hoGiaDinh.dangNha}</td>
+                        <td>${hoGiaDinh.diaChi}</td>
+                        <td>${hoGiaDinh.daiDienHo}</td>
+                        <td><button onclick="xoaHoGiaDinh(this, ${index})">Xóa</button></td>
+                        <td><button onclick="suaHoGiaDinh(this, ${index})">Sửa</button></td>
+                    `;
+                });
+            }
+            document.getElementById("diaChi").addEventListener("change", updateDefaultFields);
+        };
+
+        // Xác thực dữ liệu
+        function validateCCCD(cccd) { return /^\d{12}$/.test(cccd); }
+        function validateNgaySinh(ngaySinh) {
+            const today = new Date();
+            const birthDate = new Date(ngaySinh);
+            const age = today.getFullYear() - birthDate.getFullYear();
+            return birthDate <= today && age <= 120;
+        }
+        function isDuplicateCCCD(cccd) {
+            const rows = Array.from(document.getElementById("tableBody").rows);
+            return rows.some(row => row.cells[5].textContent === cccd && row !== editRow);
+        }
+
+        // Tự động điền thông tin
+        function updateDefaultFields() {
+            const diaChi = document.getElementById("diaChi").value;
+            document.getElementById("hoKhau").value = diaChi;
+            document.getElementById("noiO").value = diaChi;
+        }
+
+        function themHo() {
+            const hoTen = document.getElementById("hoTen").value;
+            const quanHe = document.getElementById("quanHe").value;
+            const nam = document.getElementById("nam").checked ? "Nam" : "";
+            const nu = document.getElementById("nu").checked ? "Nữ" : "";
+            const gioiTinh = nam || nu;
+            const ngaySinh = document.getElementById("ngaySinh").value;
+            const cccd = document.getElementById("cccd").value;
+            const danToc = document.getElementById("danToc").value;
+            const ngheNghiep = document.getElementById("ngheNghiep").value;
+            const thoiGianCuTru = document.getElementById("thoiGianCuTru").value;
+            const hoKhau = document.getElementById("hoKhau").value;
+            const noiO = document.getElementById("noiO").value;
+            const sdt = document.getElementById("sdt").value;
+            const trangThaiCuTru = document.getElementById("trangThaiCuTru").value;
+
+            // Kiểm tra bắt buộc
+            if (!hoTen || !quanHe || !gioiTinh) {
+                alert("Vui lòng nhập đầy đủ Họ và tên, Quan hệ với chủ hộ và Giới tính!");
+                return;
+            }
+            if (ngaySinh && !validateNgaySinh(ngaySinh)) {
+                alert("Ngày sinh không hợp lệ!");
+                return;
+            }
+            if (cccd && !validateCCCD(cccd)) {
+                alert("Số CCCD phải là 12 chữ số!");
+                return;
+            }
+            if (cccd && isDuplicateCCCD(cccd)) {
+                alert("Số CCCD này đã tồn tại trong danh sách!");
+                return;
+            }
+
+            const tableBody = document.getElementById("tableBody");
+            if (editRow) {
+                editRow.cells[1].textContent = hoTen;
+                editRow.cells[2].textContent = quanHe;
+                editRow.cells[3].textContent = gioiTinh;
+                editRow.cells[4].textContent = ngaySinh;
+                editRow.cells[5].textContent = cccd;
+                editRow.cells[6].textContent = danToc;
+                editRow.cells[7].textContent = ngheNghiep;
+                editRow.cells[8].textContent = thoiGianCuTru;
+                editRow.cells[9].textContent = hoKhau;
+                editRow.cells[10].textContent = noiO;
+                editRow.cells[11].textContent = sdt;
+                editRow.cells[12].textContent = trangThaiCuTru;
+                editRow.setAttribute("data-gioiTinh", gioiTinh);
+                editRow.classList.remove("editing");
+                editRow = null;
+            } else {
+                const row = tableBody.insertRow();
+                row.setAttribute("data-gioiTinh", gioiTinh);
+                row.innerHTML = `
+                    <td>${stt++}</td>
+                    <td>${hoTen}</td>
+                    <td>${quanHe}</td>
+                    <td>${gioiTinh}</td>
+                    <td>${ngaySinh}</td>
+                    <td>${cccd}</td>
+                    <td>${danToc}</td>
+                    <td>${ngheNghiep}</td>
+                    <td>${thoiGianCuTru}</td>
+                    <td>${hoKhau}</td>
+                    <td>${noiO}</td>
+                    <td>${sdt}</td>
+                    <td>${trangThaiCuTru}</td>
+                    <td><button onclick="xoaHang(this)">Xóa</button></td>
+                    <td><button onclick="suaHang(this)">Sửa</button></td>
+                `;
+            }
+            resetForm();
+        }
+
+        function resetForm() {
+            document.getElementById("hoTen").value = "";
+            document.getElementById("quanHe").value = "";
+            document.getElementById("nam").checked = false;
+            document.getElementById("nu").checked = false;
+            document.getElementById("ngaySinh").value = "";
+            document.getElementById("cccd").value = "";
+            document.getElementById("danToc").value = "";
+            document.getElementById("ngheNghiep").value = "";
+            document.getElementById("thoiGianCuTru").value = "";
+            document.getElementById("sdt").value = "";
+            document.getElementById("trangThaiCuTru").value = "Thường trú";
+            updateDefaultFields();
+        }
+
+        function xoaHang(button) {
+            if (confirm("Bạn có chắc chắn muốn xóa thông tin này?")) {
+                const row = button.closest("tr");
+                row.remove();
+                // Cập nhật lại STT sau khi xóa
+                const tableBody = document.getElementById("tableBody");
+                stt = 1;
+                Array.from(tableBody.rows).forEach(row => {
+                    row.cells[0].textContent = stt++;
+                });
+            }
+        }
+
+        function suaHang(button) {
+            const row = button.closest("tr");
+            if (editRow) editRow.classList.remove("editing");
+            editRow = row;
+            row.classList.add("editing");
+            document.getElementById("hoTen").value = row.cells[1].textContent;
+            document.getElementById("quanHe").value = row.cells[2].textContent;
+            document.getElementById("nam").checked = row.cells[3].textContent === "Nam";
+            document.getElementById("nu").checked = row.cells[3].textContent === "Nữ";
+            document.getElementById("ngaySinh").value = row.cells[4].textContent;
+            document.getElementById("cccd").value = row.cells[5].textContent;
+            document.getElementById("danToc").value = row.cells[6].textContent;
+            document.getElementById("ngheNghiep").value = row.cells[7].textContent;
+            document.getElementById("thoiGianCuTru").value = row.cells[8].textContent;
+            document.getElementById("hoKhau").value = row.cells[9].textContent;
+            document.getElementById("noiO").value = row.cells[10].textContent;
+            document.getElementById("sdt").value = row.cells[11].textContent;
+            document.getElementById("trangThaiCuTru").value = row.cells[12].textContent;
+        }
+
+        function ketThucNhap() {
+            const loaiCuTru = document.getElementById("loaiCuTru").value;
+            const dangNha = document.getElementById("dangNha").value;
+            const diaChi = document.getElementById("diaChi").value;
+            const daiDienHo = document.getElementById("daiDienHo").value;
+
+            if (loaiCuTru && dangNha && diaChi && daiDienHo) {
+                currentHoGiaDinh.loaiCuTru = loaiCuTru;
+                currentHoGiaDinh.dangNha = dangNha;
+                currentHoGiaDinh.diaChi = diaChi;
+                currentHoGiaDinh.daiDienHo = daiDienHo;
+
+                const tableBody = document.getElementById("tableBody");
+                const rows = Array.from(tableBody.rows).map(row => ({
+                    hoTen: row.cells[1].textContent,
+                    quanHe: row.cells[2].textContent,
+                    gioiTinh: row.getAttribute("data-gioiTinh"),
+                    ngaySinh: row.cells[4].textContent,
+                    cccd: row.cells[5].textContent,
+                    danToc: row.cells[6].textContent,
+                    ngheNghiep: row.cells[7].textContent,
+                    thoiGianCuTru: row.cells[8].textContent,
+                    hoKhau: row.cells[9].textContent,
+                    noiO: row.cells[10].textContent,
+                    sdt: row.cells[11].textContent,
+                    trangThaiCuTru: row.cells[12].textContent
+                }));
+
+                currentHoGiaDinh.rows = rows;
+
+                if (editHistoryRow !== null) {
+                    // Cập nhật hộ gia đình đang chỉnh sửa
+                    hoGiaDinhData[editHistoryRow] = { ...currentHoGiaDinh };
+                    const historyBody = document.getElementById("historyBody");
+                    const row = historyBody.rows[editHistoryRow];
+                    row.cells[1].textContent = currentHoGiaDinh.loaiCuTru;
+                    row.cells[2].textContent = currentHoGiaDinh.dangNha;
+                    row.cells[3].textContent = currentHoGiaDinh.diaChi;
+                    row.cells[4].textContent = currentHoGiaDinh.daiDienHo;
+                    editHistoryRow = null;
+                } else {
+                    // Thêm hộ gia đình mới
+                    hoGiaDinhData.push({ ...currentHoGiaDinh });
+                    const historyBody = document.getElementById("historyBody");
+                    const row = historyBody.insertRow();
+                    const index = hoGiaDinhData.length - 1;
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${currentHoGiaDinh.loaiCuTru}</td>
+                        <td>${currentHoGiaDinh.dangNha}</td>
+                        <td>${currentHoGiaDinh.diaChi}</td>
+                        <td>${currentHoGiaDinh.daiDienHo}</td>
+                        <td><button onclick="xoaHoGiaDinh(this, ${index})">Xóa</button></td>
+                        <td><button onclick="suaHoGiaDinh(this, ${index})">Sửa</button></td>
+                    `;
+                }
+
+                // Hiển thị phần lịch sử nếu có dữ liệu
+                if (hoGiaDinhData.length > 0) {
+                    document.getElementById("historySection").style.display = "block";
+                }
+
+                localStorage.setItem("hoGiaDinhData", JSON.stringify(hoGiaDinhData));
+                resetForm();
+                stt = 1;
+                tableBody.innerHTML = "";
+                currentHoGiaDinh = { loaiCuTru: "", dangNha: "", diaChi: "", daiDienHo: "", rows: [] };
+            } else {
+                alert("Vui lòng nhập đầy đủ thông tin hộ gia đình.");
+            }
+        }
+
+        function lamHoGiaDinhKhac() {
+            stt = 1;
+            document.getElementById("tableBody").innerHTML = "";
+            resetForm();
+            document.getElementById("loaiCuTru").value = "";
+            document.getElementById("dangNha").value = "";
+            document.getElementById("diaChi").value = "";
+            document.getElementById("daiDienHo").value = "";
+            editHistoryRow = null;
+        }
+
+        function xoaHoGiaDinh(button, index) {
+            if (confirm("Bạn có chắc chắn muốn xóa hộ gia đình này?")) {
+                hoGiaDinhData.splice(index, 1);
+                localStorage.setItem("hoGiaDinhData", JSON.stringify(hoGiaDinhData));
+                const historyBody = document.getElementById("historyBody");
+                historyBody.innerHTML = "";
+                hoGiaDinhData.forEach((hoGiaDinh, i) => {
+                    const row = historyBody.insertRow();
+                    row.innerHTML = `
+                        <td>${i + 1}</td>
+                        <td>${hoGiaDinh.loaiCuTru}</td>
+                        <td>${hoGiaDinh.dangNha}</td>
+                        <td>${hoGiaDinh.diaChi}</td>
+                        <td>${hoGiaDinh.daiDienHo}</td>
+                        <td><button onclick="xoaHoGiaDinh(this, ${i})">Xóa</button></td>
+                        <td><button onclick="suaHoGiaDinh(this, ${i})">Sửa</button></td>
+                    `;
+                });
+
+                // Ẩn phần lịch sử nếu không còn dữ liệu
+                if (hoGiaDinhData.length === 0) {
+                    document.getElementById("historySection").style.display = "none";
+                }
+            }
+        }
+
+        function xoaTatCaLichSu() {
+            if (confirm("Bạn có chắc chắn muốn xóa toàn bộ lịch sử các hộ gia đình?")) {
+                hoGiaDinhData = [];
+                localStorage.setItem("hoGiaDinhData", JSON.stringify(hoGiaDinhData));
+                document.getElementById("historyBody").innerHTML = "";
+                document.getElementById("historySection").style.display = "none";
+            }
+        }
+
+        function suaHoGiaDinh(button, index) {
+            const hoGiaDinh = hoGiaDinhData[index];
+            editHistoryRow = index;
+
+            // Điền thông tin hộ gia đình vào form
+            document.getElementById("loaiCuTru").value = hoGiaDinh.loaiCuTru;
+            document.getElementById("dangNha").value = hoGiaDinh.dangNha;
+            document.getElementById("diaChi").value = hoGiaDinh.diaChi;
+            document.getElementById("daiDienHo").value = hoGiaDinh.daiDienHo;
+
+            // Điền danh sách thành viên vào bảng
+            const tableBody = document.getElementById("tableBody");
+            tableBody.innerHTML = "";
+            stt = 1;
+            hoGiaDinh.rows.forEach(rowData => {
+                const row = tableBody.insertRow();
+                row.setAttribute("data-gioiTinh", rowData.gioiTinh);
+                row.innerHTML = `
+                    <td>${stt++}</td>
+                    <td>${rowData.hoTen}</td>
+                    <td>${rowData.quanHe}</td>
+                    <td>${rowData.gioiTinh}</td>
+                    <td>${rowData.ngaySinh}</td>
+                    <td>${rowData.cccd}</td>
+                    <td>${rowData.danToc}</td>
+                    <td>${rowData.ngheNghiep}</td>
+                    <td>${rowData.thoiGianCuTru}</td>
+                    <td>${rowData.hoKhau}</td>
+                    <td>${rowData.noiO}</td>
+                    <td>${rowData.sdt}</td>
+                    <td>${rowData.trangThaiCuTru}</td>
+                    <td><button onclick="xoaHang(this)">Xóa</button></td>
+                    <td><button onclick="suaHang(this)">Sửa</button></td>
+                `;
+            });
+
+            // Cập nhật currentHoGiaDinh để lưu trữ dữ liệu đang chỉnh sửa
+            currentHoGiaDinh = { ...hoGiaDinh };
+        }
+
+        function xuatExcel() {
+            const workbook = new ExcelJS.Workbook();
+            hoGiaDinhData.forEach((hoGiaDinh, index) => {
+                const worksheet = workbook.addWorksheet(`Hộ Gia Đình ${index + 1}`);
+
+                // Đặt phông chữ Times New Roman cho toàn bộ worksheet
+                worksheet.eachRow(row => {
+                    row.eachCell(cell => {
+                        cell.font = { name: 'Times New Roman', size: 12 };
+                    });
+                });
+
+                // Tiêu đề
+                worksheet.addRow(["MẪU PHÚC TRA NHÂN, HỘ KHẨU TRÊN ĐỊA BÀN ẤP ......"]);
+                worksheet.mergeCells('A1:K1');
+                worksheet.getCell('A1').alignment = { horizontal: 'center' };
+                worksheet.getCell('A1').font = { name: 'Times New Roman', size: 12, bold: true }; // In đậm
+
+                // Thông tin hộ gia đình
+                worksheet.addRow([
+                    `  "                                                                                                                                                                "                                                                                 Loại cư trú (Thường trú, tạm trú, khai báo nơi ở hiện tại): ${hoGiaDinh.loaiCuTru}.. - Dạng nhà(Nhà thuê nguyên căn, nhà trọ): ${hoGiaDinh.dangNha}.. `
+                ]);
+                worksheet.getCell('A2').alignment = { horizontal: 'center' };
+                worksheet.getCell('A2').font = { name: 'Times New Roman', size: 11, bold: true }; // In đậm// Không in đậm vì đây là thông tin cá nhân
+               // Thông Tin Địa Chỉ 
+               worksheet.addRow([
+                     `                                Địa chỉ: ${hoGiaDinh.diaChi},xã Vĩnh Lộc, huyện Bình Chánh, TP.HCM        `
+                      ]);
+                            worksheet.mergeCells('A3:K3');
+                            worksheet.getCell('A3').alignment = { horizontal: 'center' };
+                worksheet.getCell('A3').font = { name: 'Times New Roman', size: 11, bold: true };
+                            
+                // Tiêu đề bảng
+                worksheet.addRow([
+                    "STT", "HỌ VÀ TÊN", "QUAN HỆ VỚI CHỦ HỘ", "GIỚI TÍNH", "NGÀY SINH (NĂM)", "SỐ CCCD",
+                    "DÂN TỘC", "NGHỀ NGHIỆP", "THƯỜNG TRÚ", "NƠI Ở HIỆN TẠI", "SỐ ĐIỆN THOẠI"
+                ]);
+                worksheet.getRow(3).font = { name: 'Times New Roman', size: 12, bold: true }; // In đậm tiêu đề bảng
+                worksheet.getRow(3).alignment = { horizontal: 'center' };
+
+                // Định dạng chiều rộng cột
+                worksheet.columns = [
+                    { key: 'stt', width: 5 },
+                    { key: 'hoTen', width: 20 },
+                    { key: 'quanHe', width: 20 },
+                    { key: 'gioiTinh', width: 10 },
+                    { key: 'ngaySinhNam', width: 12 },
+                    { key: 'cccd', width: 15 },
+                    { key: 'danToc', width: 15 },
+                    { key: 'ngheNghiep', width: 20 },
+                    { key: 'hoKhau', width: 20 },
+                    { key: 'noiO', width: 20 },
+                    { key: 'sdt', width: 15 }
+                ];
+
+                // Thêm dữ liệu
+                hoGiaDinh.rows.forEach((rowData, i) => {
+                    const ngaySinhNam = rowData.ngaySinh ? new Date(rowData.ngaySinh).getFullYear() : "";
+                    worksheet.addRow({
+                        stt: i + 1,
+                        hoTen: rowData.hoTen,
+                        quanHe: rowData.quanHe,
+                        gioiTinh: rowData.gioiTinh,
+                        ngaySinhNam: ngaySinhNam,
+                        cccd: rowData.cccd,
+                        danToc: rowData.danToc,
+                        ngheNghiep: rowData.ngheNghiep,
+                        hoKhau: rowData.hoKhau,
+                        noiO: rowData.noiO,
+                        sdt: rowData.sdt
+                    });
+                });
+
+                // Thêm dòng chữ ký
+                const lastRow = hoGiaDinh.rows.length + 4;
+                worksheet.addRow([]);
+                worksheet.addRow(["                                                                                                                                                                                                                                                                            ĐẠI DIỆN HỘ GIA ĐÌNH"]);
+                worksheet.mergeCells(`A${lastRow + 1}:K${lastRow + 1}`);  
+                worksheet.getCell(`A${lastRow + 1}`).alignment = { horizontal: 'center' };
+                worksheet.getCell(`A${lastRow + 1}`).font = { name: 'Times New Roman', size: 12, bold: true }; // In đậm
+            });
+
+            workbook.xlsx.writeBuffer().then(function (data) {
+                const blob = new Blob([data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+                saveAs(blob, "Phuc_Tra_Nhan_Ho_Khau.xlsx");
+            });
+        }
+    </script>
+</body>
+</html>
