@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Dữ Liệu Nhân Khẩu</title>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script> -->
+    <script src="https://baobitrungthanh.com/wp-content/uploads/2024/01/mau-vector-trong-dong-21.jpg"> </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Đăng nhập -->
+    <section id="loginSection" class="section login-section active">
+        <div class="background-pattern"></div>
+        <div class="login-container">
+            <h1 class="login-title" data-lang="login">ĐĂNG NHẬP</h1>
+            <div class="login-subtitle" data-lang="title">Quản Lý Dữ Liệu Nhân Khẩu</div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <input type="text" id="username" placeholder="Tài khoản" data-lang-placeholder="username">
+                    <div class="error-text" data-lang="empty_error">Không được để trống</div>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="password" placeholder="Mật khẩu" data-lang-placeholder="password">
+                    <div class="error-text" data-lang="empty_error">Không được để trống</div>
+                </div>
+                <button type="submit" class="login-btn" data-lang="login">Đăng nhập</button>
+            </form>
+        </div>
+        <div class="overlay" id="overlay"></div>
+        <div class="error-popup" id="errorPopup">
+            <h3 data-lang="login_error">Không thể đăng nhập</h3>
+            <p data-lang="login_error_msg">Thông tin đăng nhập không chính xác. Vui lòng kiểm tra lại tài khoản và mật khẩu</p>
+            <button onclick="closeErrorPopup()" data-lang="close">Đóng</button>
+        </div>
+    </section>
+
+    <!-- Danh sách hộ -->
+    <section id="householdListSection" class="section">
+        <header class="header">
+            <h1 data-lang="title">Quản Lý Dữ Liệu Nhân Khẩu</h1>
+            <div class="header-right">
+                <select class="language-select" onchange="changeLanguage(this.value)">
+                    <option value="vi">Tiếng Việt</option>
+                    <option value="en">English</option>
+                </select>
+                <span>ADMIN</span>
+                <a class="logout-btn" onclick="logout()" data-lang="logout">Đăng xuất</a>
+            </div>
+        </header>
+        <main class="main-content">
+            <div class="search-section">
+                <h2 class="search-title" data-lang="household_list">DANH SÁCH HỘ NHÂN KHẨU</h2>
+                <form class="search-form" id="searchForm">
+                    <div class="form-group">
+                        <label data-lang="head_name">Tên chủ hộ</label>
+                        <input type="text" name="head_name" data-lang-placeholder="enter_head_name">
+                    </div>
+                    <div class="form-group">
+                        <label data-lang="cccd">CCCD</label>
+                        <input type="text" name="cccd" data-lang-placeholder="enter_cccd">
+                    </div>
+                    <div class="form-group">
+                        <label data-lang="phone">SĐT</label>
+                        <input type="text" name="phone" data-lang-placeholder="enter_phone">
+                    </div>
+                    <div class="form-group">
+                        <label data-lang="ward">Ấp</label>
+                        <select name="ward">
+                            <option value="" data-lang="select_ward">Chọn ấp</option>
+                            <option value="ap1">Ấp 1</option>
+                            <option value="ap2">Ấp 2</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label data-lang="address">Địa chỉ</label>
+                        <input type="text" name="address" data-lang-placeholder="enter_address">
+                    </div>
+                </form>
+                <div class="button-group">
+                    <button class="btn btn-clear" onclick="clearSearch()" data-lang="clear_filter">XÓA LỌC</button>
+                    <button class="btn btn-search" onclick="searchHouseholds()" data-lang="search">TÌM</button>
+                </div>
+            </div>
+            <div class="button-group" style="margin-bottom: 20px;">
+                <button class="btn btn-excel" onclick="exportHouseholdsToExcel()" data-lang="export_excel">XUẤT EXCEL</button>
+                <button class="btn btn-add" onclick="showAddHouseholdModal()" data-lang="add_new">THÊM MỚI</button>
+            </div>
+            <div class="results-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAll"></th>
+                            <th data-lang="head_name">Tên chủ hộ</th>
+                            <th data-lang="cccd">CCCD</th>
+                            <th data-lang="phone">SĐT</th>
+                            <th data-lang="ward">Ấp</th>
+                            <th data-lang="address">Địa chỉ</th>
+                            <th data-lang="sync_time">Đồng bộ lúc</th>
+                            <th data-lang="actions">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="householdTableBody"></tbody>
+                </table>
+                <div class="pagination">
+                    <div class="page-info" id="pageInfo"></div>
+                    <div class="page-numbers" id="pageNumbers"></div>
+                </div>
+            </div>
+        </main>
+    </section>
+
+    <!-- Chi tiết hộ -->
+    <section id="householdDetailSection" class="section">
+        <header class="header">
+            <h1 data-lang="title">Quản Lý Dữ Liệu Nhân Khẩu</h1>
+            <div class="header-right">
+                <select class="language-select" onchange="changeLanguage(this.value)">
+                    <option value="vi">Tiếng Việt</option>
+                    <option value="en">English</option>
+                </select>
+                <span>ADMIN</span>
+                <a class="logout-btn" onclick="logout()" data-lang="logout">Đăng xuất</a>
+            </div>
+        </header>
+        <main class="main-content">
+            <div class="breadcrumb">
+                <a onclick="showSection('householdListSection')" data-lang="list">Danh sách</a>
+                <span>></span>
+                <span class="current" id="householdName" data-lang="household"></span>
+            </div>
+            <div class="results-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th data-lang="no">STT</th>
+                            <th data-lang="member">Thành viên</th>
+                            <th data-lang="cccd">CCCD</th>
+                            <th data-lang="role">Vai trò</th>
+                            <th data-lang="relationship">Quan hệ với chủ hộ</th>
+                            <th data-lang="actions">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="memberTableBody"></tbody>
+                </table>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-excel" onclick="exportMembersToExcel()" data-lang="export_excel">Xuất excel</button>
+                <button class="btn btn-add" onclick="showAddMemberModal()" data-lang="add_new">Thêm mới</button>
+            </div>
+        </main>
+    </section>
+
+    <!-- Modal Thêm/Sửa hộ -->
+    <div id="addHouseholdModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-lang="add_household">Thêm mới hộ nhân khẩu</h2>
+                <span class="close-btn" onclick="closeAddHouseholdModal()">&times;</span>
+            </div>
+            <form class="modal-form" id="householdForm">
+                <input type="hidden" id="householdId">
+                <div class="form-group">
+                    <label data-lang="residence_type">Loại cư trú</label>
+                    <select name="residence_type" required>
+                        <option value="" data-lang="select_residence_type">Chọn loại cư trú</option>
+                        <option value="1" data-lang="permanent">Thường trú</option>
+                        <option value="2" data-lang="temporary">Tạm trú</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label data-lang="registered_at">Đăng ký tại</label>
+                    <input type="text" name="registered_at" required>
+                </div>
+                <div class="form-group">
+                    <label data-lang="ward">Ấp</label>
+                    <select name="ward" required>
+                        <option value="" data-lang="select_ward">Chọn ấp</option>
+                        <option value="ap1">Ấp 1</option>
+                        <option value="ap2">Ấp 2</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label data-lang="head_name">Họ và tên chủ hộ</label>
+                    <input type="text" name="head_name" pattern="[A-Za-zÀ-ỹ\s]+" required>
+                </div>
+                <div class="form-group">
+                    <label data-lang="gender">Giới tính</label>
+                    <select name="gender" required>
+                        <option value="" data-lang="select_gender">Chọn giới tính</option>
+                        <option value="nam" data-lang="male">Nam</option>
+                        <option value="nu" data-lang="female">Nữ</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label data-lang="birthdate">Ngày sinh</label>
+                    <input type="date" name="birthdate" max="2025-04-30" required>
+                </div>
+                <div class="form-group">
+                    <label data-lang="cccd">CCCD</label>
+                    <input type="text" name="cccd" pattern="\d{12}" required>
+                </div>
+                <div class="form-group">
+                    <label data-lang="ethnicity">Dân tộc</label>
+                    <select name="ethnicity" required>
+                        <option value="" data-lang="select_ethnicity">Chọn dân tộc</option>
+                        <option value="kinh" data-lang="kinh">Kinh</option>
+                        <option value="khac" data-lang="khac">Khác</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label data-lang="occupation">Nghề nghiệp</label>
+                    <input type="text" name="occupation" required>
+                </div>
+                <div class="form-group
+">
+                    <label data-lang="permanent_address">Hộ khẩu thường trú</label>
+                    <input type="text" name="permanent_address" required>
+                </div>
+                <div class="form-group">
+                    <label data-lang="current_address">Nơi ở hiện tại</label>
+                    <input type="text" name="current_address" required>
+                </div>
+                <div class="form-group">
+                        <label data-lang="phone">Số điện thoại</label>
+                        <input type="text" name="phone" inputmode="numeric" pattern="0\d{9}" maxlength="10" required
+                               oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                        <span class="error" id="phoneError" data-lang="phone_error">Số điện thoại không hợp lệ</span>
+                </div>
+                <div class="form-group">
+                    <label data-lang="residence_status">Trạng thái cư trú</label>
+                    <select name="residence_status" required>
+                        <option value="" data-lang="select_status">Chọn trạng thái</option>
+                        <option value="1" data-lang="residing">Đang cư trú</option>
+                        <option value="2" data-lang="moved">Đã chuyển đi</option>
+                        <option value="3" data-lang="temporarily_absent">Tạm vắng</option>
+                    </select>
+                </div>
+                <div class="form-group
+">
+                    <label data-lang="sync_status">Trạng thái đồng bộ</label>
+                    <select name="sync_status" required>
+                        <option value="" data-lang="select_sync_status">Chọn trạng thái</option>
+                        <option value="1" data-lang="synced">Đã đồng bộ</option>
+                        <option value="2" data-lang="not_synced">Chưa đồng bộ</option>
+                    </select>
+                </div>  
+                <div class="form-group
+">
+                    <label data-lang="sync_time">Thời gian đồng bộ</label>
+                    <input type="text" name="sync_time" required>
+            </div>
+                <div class="form-group">
+                    <label data-lang="address">Địa chỉ</label>
+                    <input type="text" name="address" required>
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn btn-clear" onclick="closeAddHouseholdModal()" data-lang="cancel">Hủy</button>
+                    <button type="submit" class="btn btn-add" data-lang="add">Thêm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Thêm/Sửa thành viên -->
+    <div id="memberModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle" data-lang="add_member">Thêm thành viên</h2>
+                <span class="close-btn" onclick="closeMemberModal()">&times;</span>
+            </div>
+            <form class="modal-form" id="memberForm">
+                <input type="hidden" id="memberId">
+                <div class="form-group">
+                    <label data-lang="name">Họ và tên</label>
+                    <input type="text" name="name" pattern="[A-Za-zÀ-ỹ\s]+" required>
+                    <span class="error" id="nameError" data-lang="name_error">Tên không hợp lệ</span>
+                </div>
+                <div class="form-group">
+                    <label data-lang="relationship">Quan hệ với chủ hộ</label>
+                    <select name="relationship" id="quanhe" required onchange="hienInputKhac(this)">
+                        <option value="" data-lang="select_relationship">Chọn quan hệ</option>
+                        <option value="chuho" data-lang="chuho">Chủ hộ</option>
+                        <option value="vo" data-lang="vo">Vợ</option>
+                        <option value="chong" data-lang="chong">Chồng</option>
+                        <option value="con" data-lang="con">Con</option>
+                        <option value="chau" data-lang="chau">Cháu</option>
+                        <option value="ongba" data-lang="ongba">Ông/Bà</option>
+                        <option value="cha" data-lang="cha">Cha</option>
+                        <option value="me" data-lang="me">Mẹ</option>
+                        <option value="anh" data-lang="anh">Anh</option>
+                        <option value="chi" data-lang="chi">Chị</option>
+                        <option value="em" data-lang="em">Em</option>
+                        <option value="khac" data-lang="khac">Khác</option>
+                    </select>
+                    <input type="text" id="quanhe_khac_input" name="quanhe_khac" placeholder="Nhập quan hệ khác" style="display:none; margin-top: 10px;">
+                </div>
+                <div class="form-group">
+                    <label data-lang="gender">Giới tính</label>
+                    <select name="gender" required>
+                        <option value="" data-lang="select_gender">Chọn giới tính</option>
+                        <option value="nam" data-lang="male">Nam</option>
+                        <option value="nu" data-lang="female">Nữ</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label data-lang="birthdate">Ngày sinh</label>
+                    <input type="date" name="birthdate" max="2025-04-30" required>
+                    <span class="error" id="birthdateError" data-lang="birthdate_error">Ngày sinh không hợp lệ</span>
+                </div>
+                <div class="form-group">
+                    <label data-lang="cccd">CCCD</label>
+                    <input type="text" name="cccd" pattern="\d{12}" required>
+                    <span class="error" id="cccdError" data-lang="cccd_error">CCCD đã tồn tại</span>
+                </div>
+                <div class="form-group">
+                    <label>Dân tộc</label>
+                    <select id="ethnicity" name="ethnicity" required onchange="showOtherEthnicity(this)">
+                        <option value="">Chọn dân tộc</option>
+                        <option value="kinh">Kinh</option>
+                        <option value="tay">Tày</option>
+                        <option value="thai">Thái</option>
+                        <option value="muong">Mường</option>
+                        <option value="khome">Khmer</option>
+                        <option value="hoa">Hoa</option>
+                        <option value="nun">Nùng</option>
+                        <option value="hmong">H'Mông</option>
+                        <option value="dao">Dao</option>
+                        <option value="gia-rai">Gia Rai</option>
+                        <option value="ede">Ê Đê</option>
+                        <option value="ba-na">Ba Na</option>
+                        <option value="xo-dang">Xơ Đăng</option>
+                        <option value="san-chay">Sán Chay</option>
+                        <option value="co-ho">Cơ Ho</option>
+                        <option value="cham">Chăm</option>
+                        <option value="san-diu">Sán Dìu</option>
+                        <option value="hrê">Hrê</option>
+                        <option value="ra-glai">Ra Glai</option>
+                        <option value="mnong">M'Nông</option>
+                        <option value="tho">Thổ</option>
+                        <option value="stieng">Stiêng</option>
+                        <option value="bru-van-kieu">Brâu - Vân Kiều</option>
+                        <option value="co-tu">Cơ Tu</option>
+                        <option value="giay">Giáy</option>
+                        <option value="ta-oi">Tà Ôi</option>
+                        <option value="chau-ro">Châu Ro</option>
+                        <option value="mong">Mông</option>
+                        <option value="lu">Lự</option>
+                        <option value="la-chi">La Chí</option>
+                        <option value="phu-la">Phù Lá</option>
+                        <option value="nghe">Ngái</option>
+                        <option value="pa-co">Pà Cô</option>
+                        <option value="si-la">Si La</option>
+                        <option value="la-ha">La Ha</option>
+                        <option value="la-hu">La Hủ</option>
+                        <option value="chu-ru">Chu Ru</option>
+                        <option value="loa">Lô Lô</option>
+                        <option value="brâu">Brâu</option>
+                        <option value="o-du">Ơ Đu</option>
+                        <option value="ro-mam">Rơ Măm</option>
+                        <option value="pu-peo">Pà Thẻn</option>
+                        <option value="khac">Khác</option>
+                    </select>
+                
+                    <input type="text" id="ethnicity_other" name="ethnicity_other"
+                           placeholder="Nhập dân tộc khác" style="display:none; margin-top: 10px;" required>
+                </div>
+                <div class="form-group"> 
+                        <label data-lang="residence_time">Thời gian cư trú</label>
+                        <input type="text" name="residence_time" required>
+                    </div>               
+                <div class="form-group">
+                    <label data-lang="occupation">Nghề nghiệp</label>
+                    <input type="text" name="occupation" required>
+                </div>
+                <div class="form-group">
+                    <label data-lang="permanent_address">Hộ khẩu thường trú</label>
+                    <input type="text" name="permanent_address" required>
+                </div>
+                <div class="form-group">
+                    <label data-lang="current_address">Nơi ở hiện tại</label>
+                    <input type="text" name="current_address" required>
+                </div>
+                <div class="form-group">
+                    <label data-lang="phone">Số điện thoại</label>
+                    <input type="tel" name="phone" pattern="0\d{9}" required>
+                    <span class="error" id="phoneError" data-lang="phone_error">Số điện thoại không hợp lệ</span>
+                </div>
+                <div class="form-group">
+                    <label data-lang="residence_status">Trạng thái cư trú</label>
+                    <select name="residence_status" required>
+                        <option value="" data-lang="select_status">Chọn trạng thái</option>
+                        <option value="1" data-lang="residing">Đang cư trú</option>
+                        <option value="2" data-lang="moved">Đã chuyển đi</option>
+                        <option value="3" data-lang="temporarily_absent">Tạm vắng</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn btn-clear" onclick="closeMemberModal()" data-lang="cancel">Hủy</button>
+                    <button type="submit" class="btn btn-add" id="submitMemberBtn" data-lang="add">Thêm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Xóa thành viên -->
+    <div id="deleteMemberModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 data-lang="confirm_delete">Xác nhận xóa thành viên</h2>
+                <span class="close-btn" onclick="closeDeleteMemberModal()">&times;</span>
+            </div>
+            <div style="text-align: center; padding: 20px;">
+                <p data-lang="delete_confirm_msg">Thành viên sẽ bị xóa khỏi hộ cư trú</p>
+                <div class="button-group" style="justify-content: center; margin-top: 20px;">
+                    <button class="btn btn-clear" onclick="closeDeleteMemberModal()" data-lang="cancel">Hủy</button>
+                    <button class="btn btn-add" onclick="confirmDeleteMember()" data-lang="delete">Xác nhận</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Lỗi -->
+    <div id="errorModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 data-lang="error">Có lỗi xảy ra</h2>
+                <span class="close-btn" onclick="closeErrorModal()">&times;</span>
+            </div>
+            <div style="text-align: center; padding: 20px;">
+                <p data-lang="error_msg">Vui lòng thử lại sau</p>
+                <div class="button-group" style="justify-content: center; margin-top: 20px;">
+                    <button class="btn btn-add" onclick="closeErrorModal()" data-lang="retry">Thử lại</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="scrpt.js"></script>
+</body>
+</html>
